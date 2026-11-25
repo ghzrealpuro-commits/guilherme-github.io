@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EMEC Smart Tools — Sistema</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef1f3;--surface:#fff;--ink:#1c2830;--muted:#5a6a75;--line:#cfd7dc;--steel:#24323c;--accent:#f2b01e;--ok:#12806a;--use:#c9561a;--res:#a8740a;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a20;--surface:#1b262e;--ink:#e8eef1;--muted:#98a8b2;--line:#2f3d47;--steel:#0b1116;--ok:#3fc6a8;--use:#ff8a4d;--res:#f2b01e}}
+:root[data-theme="dark"]{--bg:#121a20;--surface:#1b262e;--ink:#e8eef1;--muted:#98a8b2;--line:#2f3d47;--steel:#0b1116;--ok:#3fc6a8;--use:#ff8a4d;--res:#f2b01e}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 Barlow,system-ui,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;line-height:1.1;margin:0 0 .5em}
+h2{font-size:2rem}h3{font-size:1.3rem}
+button,input,select{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{background:var(--steel);color:#f2f5f7;padding:calc(env(safe-area-inset-top,0px) + 10px) 18px 10px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.top b{font:700 1.5rem "Barlow Condensed",sans-serif}
+.top span{font-size:.9rem;color:#c3cfd6}
+.tabs{background:var(--steel);display:flex;overflow-x:auto;padding:0 10px;position:sticky;top:0;z-index:4}
+.tabs button{background:none;border:0;color:#9fb0ba;padding:12px 14px;font-weight:600;border-bottom:4px solid transparent;white-space:nowrap}
+.tabs button[aria-current="page"]{color:#fff;border-bottom-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.btn{background:var(--accent);color:#1c2830;border:0;padding:10px 18px;font-weight:600}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn.sm{padding:6px 12px;font-size:.88rem}
+.top .btn.sec{color:#fff;border-color:#9fb0ba}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);padding:14px;border-left:5px solid var(--line)}
+.stat strong{display:block;font:700 2.6rem/1 "Barlow Condensed",sans-serif}
+.stat.d{border-color:var(--ok)}.stat.r{border-color:var(--res)}.stat.u{border-color:var(--use)}
+.box{background:var(--surface);padding:16px;margin-bottom:18px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:820px){.cols{grid-template-columns:1fr}}
+.sc{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:420px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:.95rem}
+th{font:600 1.05rem "Barlow Condensed",sans-serif}
+.st{font-weight:600;font-size:.88rem}
+.st.d{color:var(--ok)}.st.u{color:var(--use)}.st.r{color:var(--res)}
+.muted,.note{color:var(--muted);font-size:.9rem}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+input,select{padding:9px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:180px}
+.welcome{background:var(--surface);border-left:6px solid var(--ok);padding:14px 18px;margin-bottom:18px}
+.welcome h3{font-size:1.8rem;margin:0 0 4px}
+.flash{padding:10px 14px;margin-bottom:14px;border-left:6px solid var(--accent);background:var(--surface);font-weight:500}
+.flash.err{border-color:var(--use)}
+.login{max-width:380px;margin:8vh auto;padding:0 18px}
+.login h1{font-size:3rem}
+.login form{display:grid;gap:12px;margin:18px 0 12px}
+.login input,.login select{width:100%}
+.pad{display:block;margin:22px auto 8px;width:200px;height:200px;border-radius:50%;border:4px solid var(--ink);background:var(--surface);color:var(--ink);position:relative;overflow:hidden;padding:12px}
+.pad svg{width:100%;height:100%}
+.pad .beam{position:absolute;left:0;right:0;top:0;height:4px;background:var(--accent);opacity:0}
+.pad.scanning{border-color:var(--accent)}
+.pad.scanning .beam{opacity:1;animation:sweep 1.2s ease-in-out infinite alternate}
+@keyframes sweep{to{top:calc(100% - 4px)}}
+.pad.ok{border-color:var(--ok);color:var(--ok)}
+@media (prefers-reduced-motion:reduce){.pad.scanning .beam{animation:none;top:50%}}
+/* Como funciona em 3D */
+main:has(#stage){max-width:1280px}
+#stage{position:relative;height:min(66vh,600px);overflow:hidden;background:radial-gradient(circle at 50% 30%,var(--surface),var(--bg));margin-bottom:16px}
+#cv{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cv:active{cursor:grabbing}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-bottom:3px solid var(--accent);padding:2px 8px;font-weight:600;font-size:.78rem;pointer-events:none;white-space:nowrap}
+.hint{position:absolute;right:10px;top:10px;font-size:.8rem;color:var(--muted);background:var(--surface);padding:3px 8px;border:1px solid var(--line)}
+#reset{position:absolute;right:10px;bottom:10px;background:var(--surface);color:var(--ink);border:1px solid var(--ink);padding:6px 12px;font:600 .85rem Barlow,sans-serif}
+#err{padding:30px;text-align:center}
+.cfpanel h3{font-size:1.7rem;margin:0 0 4px}
+.cfpanel p{margin:0 0 10px;min-height:3em}
+.ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ctl button{border:0;padding:10px 16px;font:600 1rem Barlow,sans-serif;background:var(--steel);color:#fff;min-height:44px}
+.ctl .go{background:var(--accent);color:#1c2830}
+.dots{display:flex;gap:6px;margin-left:auto}
+.dots button{width:34px;min-height:34px;padding:0;background:transparent;color:var(--ink);border:2px solid var(--line)}
+.dots button[aria-current="step"]{background:var(--accent);color:#1c2830;border-color:var(--accent)}
+/* ===== Camada tech ===== */
+body{background-image:radial-gradient(circle at 15% 8%,rgba(0,229,255,.07),transparent 42%),radial-gradient(circle at 88% 92%,rgba(242,176,30,.08),transparent 45%)}
+.top{background:linear-gradient(90deg,#0b1116,#24323c 50%,#0b1116);box-shadow:0 2px 20px rgba(0,229,255,.28)}
+.tabs button{transition:color .2s,border-color .2s,text-shadow .2s}
+.tabs button[aria-current="page"]{text-shadow:0 0 14px rgba(242,176,30,.85)}
+.box,.stat{box-shadow:0 0 0 1px rgba(0,229,255,.1),0 8px 26px rgba(0,0,0,.22)}
+.box{position:relative;overflow:hidden}
+.box::before{content:"";position:absolute;top:0;left:0;width:24px;height:24px;border-top:2px solid #00e5ff;border-left:2px solid #00e5ff;opacity:.65;pointer-events:none}
+.box::after{content:"";position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.65;pointer-events:none}
+.btn{box-shadow:0 0 14px rgba(242,176,30,.3);transition:box-shadow .2s}
+.btn:hover{box-shadow:0 0 22px rgba(242,176,30,.55)}
+.btn.sec:hover{border-color:#00e5ff;color:#00e5ff;box-shadow:0 0 14px rgba(0,229,255,.45)}
+.stat strong{text-shadow:0 0 18px rgba(0,229,255,.5)}
+.lk3d{background:none;border:0;color:var(--ink);font:600 1rem "Barlow Condensed",sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted}
+.lk3d:hover{color:#00e5ff;text-shadow:0 0 10px rgba(0,229,255,.7)}
+.t3d-ov{position:fixed;inset:0;background:rgba(4,10,14,.75);backdrop-filter:blur(5px);z-index:60;display:flex;align-items:center;justify-content:center;padding:14px}
+.t3d{width:min(880px,96vw);height:min(620px,90vh);background:linear-gradient(165deg,#0d151c,#18242e);border:1px solid rgba(0,229,255,.4);box-shadow:0 0 46px rgba(0,229,255,.28),inset 0 0 70px rgba(0,0,0,.55);color:#e8eef1;display:flex;flex-direction:column;overflow:hidden}
+.t3d-hd{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(0,229,255,.25);background:rgba(0,229,255,.05)}
+.t3d-hd b{font:700 1.35rem "Barlow Condensed",sans-serif}
+.t3d-x{background:none;border:1px solid #9fb0ba;color:#e8eef1;width:34px;height:34px;font-size:1rem;cursor:pointer}
+.t3d-x:hover{border-color:#00e5ff;color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.5)}
+.t3d-st{position:relative;flex:1;min-height:0;background:radial-gradient(circle at 50% 35%,#182631,#0a1218 75%)}
+.t3d-st canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.t3d-st canvas:active{cursor:grabbing}
+.t3d-hint{position:absolute;left:12px;bottom:10px;font-size:.78rem;color:#9fb0ba;background:rgba(13,21,28,.8);border:1px solid rgba(0,229,255,.25);padding:3px 8px}
+.t3d-tag{position:absolute;right:12px;top:10px;font:600 .72rem "Barlow Condensed",sans-serif;letter-spacing:.14em;color:#00e5ff;border:1px solid rgba(0,229,255,.4);padding:2px 8px;background:rgba(0,229,255,.06)}
+/* Como funciona — layout moderno */
+.cfhero{font-size:2.6rem;margin-bottom:2px}
+.cfsub{color:var(--muted);font-size:1.08rem;margin:0 0 14px;max-width:780px}
+.cfpanel{border-top:5px solid var(--accent);padding:20px 22px}
+.cfpanel h3{font-size:2rem;margin:0 0 6px}
+.cfpanel p{font-size:1.05rem;min-height:3.2em}
+.cfttl{font-size:1.6rem;margin:26px 0 4px}
+.cflead{color:var(--muted);font-size:.98rem;margin:0 0 14px}
+.cfgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:26px}
+.cfcard{position:relative;background:var(--surface);border:1px solid var(--line);padding:14px 16px 15px;text-align:left;color:var(--ink);display:flex;flex-direction:column;gap:7px;animation:cfIn .55s both;transition:transform .18s,box-shadow .18s,border-color .18s}
+.cfcard:hover{transform:translateY(-3px);border-color:#00e5ff;box-shadow:0 8px 22px rgba(0,229,255,.16)}
+.cfcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 10px 26px rgba(242,176,30,.2)}
+.cfcard.on::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.cfch{display:flex;align-items:center;gap:10px}
+.cfn{width:30px;height:30px;flex:none;border-radius:50%;background:var(--steel);color:#fff;font:700 1rem "Barlow Condensed",sans-serif;display:flex;align-items:center;justify-content:center;transition:background .2s,box-shadow .2s}
+.cfcard.on .cfn{background:var(--accent);color:#1c2830;box-shadow:0 0 12px rgba(242,176,30,.75)}
+.cfic{width:26px;height:26px;flex:none;margin-left:auto;color:#00e5ff}
+.cfic svg{width:100%;height:100%;display:block}
+.cfcard b{font:600 1.2rem "Barlow Condensed",sans-serif;line-height:1.1}
+.cfcard p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.45}
+@keyframes cfIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cfcard{animation:none}}
+@media (max-width:600px){.cfhero{font-size:2.1rem}.cfpanel h3{font-size:1.6rem}.cfgrid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var KEY="emec-smart-sistema-v2",LB={d:"Disponível",u:"Em uso"};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fmt(t){return new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function hhmm(){return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+function seed(){
+ var now=Date.now(),L=[["Alargador","Corte"],["Bedame","Corte"],["Broca","Corte"],["Broca de centro","Corte"],["Escareador","Corte"],["Fresa","Corte"],["Fresa de topo","Corte"],["Macho de rosca","Corte"],["Pastilha","Corte"],["Tarraxa","Corte"],["Bloco-padrão","Medição"],["Calibrador de rosca","Medição"],["Goniômetro","Medição"],["Micrômetro","Medição"],["Paquímetro","Medição"],["Relógio comparador","Medição"],["Chave de impacto","Aperto"],["Chave de torque","Aperto"],["Soquete","Aperto"],["Torquímetro","Aperto"],["Esmerilhadeira","Elétrica"],["Furadeira portátil","Elétrica"],["Parafusadeira","Elétrica"],["Rebolo","Elétrica"]];
+ var tools=L.map(function(x,i){return {id:x[0].replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase()+("00"+(i+1)).slice(-3),n:x[0],c:x[1],s:"d",op:null,os:null,t:now}});
+ var ops=[{m:"1001",n:"Carlos Eduardo Ferreira Lima",p:"admin",g:"03"},{m:"1002",n:"Mariana Souza Oliveira",p:"operador",g:"07"},{m:"1003",n:"João Pedro Almeida Costa",p:"operador",g:"12"},{m:"1004",n:"Ana Beatriz Rodrigues Martins",p:"operador",g:"15"}];
+ var os=[{n:"OS-1042",d:"Usinagem de eixo, lote 12"},{n:"OS-1043",d:"Manutenção da prensa 3"},{n:"OS-1044",d:"Calibração de gabaritos"}];
+ var hist=[];
+ [["Broca","u","1002","OS-1042"],["Paquímetro","u","1003","OS-1042"],["Chave de torque","u","1004","OS-1043"]].forEach(function(x,i){
+  var t=tools.filter(function(y){return y.n===x[0]})[0];t.s=x[1];t.op=x[2];t.os=x[3];t.t=now-(4-i)*600000;
+  hist.push({t:t.t,k:x[1]==="u"?"Retirada":"Reserva",id:t.id,n:t.n,op:x[2],os:x[3]});
+ });
+ return {tools:tools,ops:ops,os:os,hist:hist};
+}
+function load(){try{var j=localStorage.getItem(KEY);if(j)return JSON.parse(j)}catch(e){}return seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var S=load(),U=null,scanning=false,ident=null,selOp=S.ops[0].m,tab="painel",flash=null,welcome=null,q="",fe="",cod="",osSel="",foc=null;
+function opn(m){var o=S.ops.filter(function(x){return x.m===m})[0];return o?o.n:"—"}
+function chip(s,t){var lk=t&&t.s==="u"&&t.op&&U&&t.op!==U.m;return '<span class="st '+s+'">'+(lk?"🔒 ":"")+LB[s]+'</span>'}
+function admin(){return U&&U.p==="admin"}
+function entrar(o){
+ U=o;tab="painel";
+ var h=new Date().getHours(),sd=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+ welcome={h:hhmm(),t:sd+", "+o.n+"!",g:o.g};
+ S.hist.push({t:Date.now(),k:"Chegada",id:"—",n:"Acesso ao sistema",op:o.m,os:"—"});save();
+}
+function loginView(){
+ var h='<div class="login"><h1>EMEC Smart Tools</h1><p class="muted">Sistema de controle de ferramentas</p>';
+ h+='<button class="pad'+(ident?' ok':scanning?' scanning':'')+'" data-act="scan" aria-label="Colocar o dedo no leitor de digital"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M40 62a10 10 0 0 1 20 0v10"/><path d="M32 66a18 18 0 0 1 36 0v12"/><path d="M24 70a26 26 0 0 1 52 0v8"/><path d="M16 74a34 34 0 0 1 68 0v4"/><path d="M50 56v26"/></svg><span class="beam"></span></button>';
+ h+='<p class="note" role="status" style="text-align:center">'+(ident?'':scanning?'Lendo digital…':'Toque no leitor para colocar o dedo.')+'</p>';
+ if(ident){var hr=new Date().getHours(),sd=hr<12?"Bom dia":hr<18?"Boa tarde":"Boa noite";h+='<div class="welcome" role="status"><p class="muted" style="margin:0">Digital reconhecida. Chegada registrada às '+hhmm()+'</p><h3>'+esc(sd+", "+ident.n+"!")+'</h3><p style="margin:0">Usuário '+esc(ident.m)+'. Abrindo o sistema…</p></div>'}
+ h+='<label>Simular a digital de<select id="mat">'+S.ops.map(function(o){return '<option value="'+esc(o.m)+'"'+(o.m===selOp?' selected':'')+'>'+esc(o.n)+'</option>'}).join("")+'</select></label><p class="note" style="margin-top:12px">Demonstração: operadores e digitais fictícios. No uso real, o leitor biométrico fica ligado ao computador ou tablet.</p></div>';
+ return h;
+}
+function shell(v){
+ var T=[["painel","Painel"],["mov","Movimentar"],["tools","Ferramentas"],["os","Ordens de serviço"],["hist","Histórico"],["cf","Como funciona"]];
+ return '<header class="top"><div><b>EMEC Smart Tools</b><br><span>'+esc(U.n)+' ('+esc(U.p)+')</span></div><button class="btn sec sm" data-act="sair">Sair</button></header><nav class="tabs" aria-label="Módulos">'+T.map(function(x){return '<button data-act="tab" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>'}).join("")+'</nav><main>'+(flash?'<div class="flash'+(flash.err?' err':'')+'" role="status">'+esc(flash.m)+'</div>':'')+v+'</main>';
+}
+function cnt(s){return S.tools.filter(function(t){return t.s===s}).length}
+function painel(){
+ var uso=S.tools.filter(function(t){return t.s!=="d"}).sort(function(a,b){return a.n.localeCompare(b.n,"pt")});
+ return (welcome?'<div class="welcome"><p class="muted" style="margin:0">Chegada registrada às '+esc(welcome.h)+'</p><h3>'+esc(welcome.t)+'</h3><p style="margin:0">Sua gaveta nº '+esc(welcome.g)+' está liberada. Boa jornada de trabalho!</p></div>':'')+
+ '<h2>Painel</h2><div class="grid"><div class="stat d"><strong>'+cnt("d")+'</strong>Disponíveis</div><div class="stat u"><strong>'+cnt("u")+'</strong>Em uso</div><div class="stat"><strong>'+S.tools.length+'</strong>Total</div></div>'+
+ '<div class="cols"><div class="box"><h3>Em uso agora</h3><div class="sc"><table><thead><tr><th>Ferramenta</th><th>Situação</th><th>Operador</th><th>OS</th></tr></thead><tbody>'+(uso.map(function(t){return '<tr><td>'+esc(t.n)+' <span class="muted">'+esc(t.id)+'</span></td><td>'+chip(t.s,t)+'</td><td>'+esc(opn(t.op))+'</td><td>'+esc(t.os)+'</td></tr>'}).join("")||'<tr><td colspan="4">Nenhuma ferramenta em uso.</td></tr>')+'</tbody></table></div></div>'+
+ '<div class="box"><h3>Últimas movimentações</h3><div class="sc"><table><thead><tr><th>Quando</th><th>Evento</th><th>Operador</th></tr></thead><tbody>'+S.hist.slice(-8).reverse().map(function(h){return '<tr><td>'+fmt(h.t)+'</td><td>'+esc(h.k+" — "+h.n)+'</td><td>'+esc(opn(h.op))+'</td></tr>'}).join("")+'</tbody></table></div></div></div>'+(admin()?'<button class="btn sec" data-act="reset">Restaurar dados de demonstração</button>':'');
+}
+function acoes(t){
+ if(t.s==="d")return [["u","Retirar"]];
+ if(t.s==="u"&&t.op===U.m)return [["d","Devolver"]];
+ return [];
+}
+function mov(){
+ var t=S.tools.filter(function(x){return x.id===cod})[0],open=S.os;
+ var h='<h2>Movimentar</h2><div class="box"><form id="f-cod" class="bar"><label>Código da ferramenta (QR Code ou digitação)<input id="cod" value="'+esc(cod)+'" placeholder="Ex.: BR003" autocomplete="off"></label><button class="btn">Buscar</button></form>';
+ if(cod&&!t)h+='<p class="flash err">Código não encontrado.</p>';
+ if(t){
+  var A=acoes(t);
+  h+='<h3>'+esc(t.n)+' <span class="muted">'+esc(t.id)+'</span> '+chip(t.s,t)+' <button class="btn sec sm" data-act="t3d" data-id="'+esc(t.id)+'">Ver em 3D</button></h3>';
+  if(t.s!=="d")h+='<p>Com <b>'+esc(opn(t.op))+'</b>, ordem de serviço '+esc(t.os)+', desde '+fmt(t.t)+'.</p>';
+  if(!A.length)h+='<p class="flash err">🔒 Bloqueado: esta ferramenta está em uso por <b>'+esc(opn(t.op))+'</b>. Somente quem a retirou com a própria digital pode devolvê-la.</p>';
+  else h+='<div class="bar"><label>Ordem de serviço<select id="os">'+open.map(function(o){return '<option'+((osSel||t.os)===o.n?' selected':'')+' value="'+esc(o.n)+'">'+esc(o.n+" — "+o.d)+'</option>'}).join("")+'</select></label>'+A.map(function(a){return '<button class="btn" data-act="mv" data-a="'+a[0]+'">'+a[1]+'</button>'}).join("")+'</div>';
+ }
+ h+='</div><div class="box"><h3>Minhas ferramentas</h3>';
+ var mine=S.tools.filter(function(x){return x.op===U.m});
+ h+=mine.length?'<div class="sc"><table><tbody>'+mine.map(function(x){return '<tr><td>'+esc(x.n)+' <span class="muted">'+esc(x.id)+'</span></td><td>'+chip(x.s,x)+'</td><td>'+esc(x.os)+'</td><td><button class="btn sec sm" data-act="goto" data-id="'+esc(x.id)+'">Abrir</button></td></tr>'}).join("")+'</tbody></table></div>':'<p class="muted">Você não tem ferramentas retiradas ou reservadas.</p>';
+ return h+'</div>';
+}
+function tools(){
+ var L=S.tools.filter(function(t){return (!fe||t.s===fe)&&(t.n+" "+t.id+" "+t.c).toLowerCase().indexOf(q.toLowerCase())>=0}).sort(function(a,b){return a.n.localeCompare(b.n,"pt")});
+ var h='<h2>Ferramentas</h2>';
+ if(admin())h+='<div class="box"><h3>Cadastrar ferramenta</h3><form id="f-tool" class="bar"><label>Nome<input id="tn" required></label><label>Categoria<select id="tc"><option>Corte</option><option>Medição</option><option>Aperto</option><option>Elétrica</option></select></label><button class="btn">Cadastrar</button></form></div>';
+ h+='<div class="bar"><label>Buscar<input id="q" value="'+esc(q)+'" placeholder="Nome ou código"></label><label>Situação<select id="fe"><option value="">Todas</option><option value="d"'+(fe==="d"?" selected":"")+'>Disponíveis</option><option value="u"'+(fe==="u"?" selected":"")+'>Em uso</option></select></label></div>';
+ return h+'<div class="box"><p class="muted">'+L.length+' de '+S.tools.length+' ferramentas</p><div class="sc"><table><thead><tr><th>Código</th><th>Ferramenta</th><th>Categoria</th><th>Situação</th><th>Operador</th><th></th></tr></thead><tbody>'+L.map(function(t){return '<tr><td>'+esc(t.id)+'</td><td><button class="lk3d" data-act="t3d" data-id="'+esc(t.id)+'" title="Ver modelo 3D">'+esc(t.n)+'</button></td><td>'+esc(t.c)+'</td><td>'+chip(t.s,t)+'</td><td>'+esc(t.op?opn(t.op):"—")+'</td><td><button class="btn sec sm" data-act="goto" data-id="'+esc(t.id)+'">'+(t.s==="u"&&t.op!==U.m?"🔒 Ver":"Movimentar")+'</button> <button class="btn sec sm" data-act="t3d" data-id="'+esc(t.id)+'">3D</button></td></tr>'}).join("")+'</tbody></table></div></div>';
+}
+function osv(){
+ var h='<h2>Ordens de serviço</h2>';
+ if(admin())h+='<div class="box"><h3>Nova ordem de serviço</h3><form id="f-os" class="bar"><label>Descrição<input id="od" required style="min-width:280px"></label><button class="btn">Abrir OS</button></form></div>';
+ return h+'<div class="box"><div class="sc"><table><thead><tr><th>OS</th><th>Descrição</th><th>Ferramentas vinculadas</th></tr></thead><tbody>'+S.os.map(function(o){var L=S.tools.filter(function(t){return t.os===o.n});return '<tr><td>'+esc(o.n)+'</td><td>'+esc(o.d)+'</td><td>'+(L.map(function(t){return esc(t.n)+" ("+LB[t.s].toLowerCase()+")"}).join(", ")||"—")+'</td></tr>'}).join("")+'</tbody></table></div></div>';
+}
+function histv(){
+ var L=S.hist.filter(function(h){return !q||(h.k+" "+h.n+" "+opn(h.op)+" "+h.os).toLowerCase().indexOf(q.toLowerCase())>=0}).slice().reverse().slice(0,200);
+ return '<h2>Histórico</h2><div class="bar"><label>Buscar<input id="q" value="'+esc(q)+'" placeholder="Evento, ferramenta, operador ou OS"></label></div><div class="box"><div class="sc"><table><thead><tr><th>Quando</th><th>Evento</th><th>Ferramenta</th><th>Operador</th><th>OS</th></tr></thead><tbody>'+L.map(function(h){return '<tr><td>'+fmt(h.t)+'</td><td>'+esc(h.k)+'</td><td>'+esc(h.n)+' <span class="muted">'+esc(h.id)+'</span></td><td>'+esc(opn(h.op))+'</td><td>'+esc(h.os)+'</td></tr>'}).join("")+'</tbody></table></div></div>';
+}
+function render(){
+ var a=document.getElementById("app"),v;
+ if(!U){a.innerHTML=loginView();return}
+ v={painel:painel,mov:mov,tools:tools,os:osv,hist:histv,cf:cfv}[tab]();
+ a.innerHTML=shell(v);
+ if(foc){var e=document.getElementById(foc.id);if(e){e.focus();try{e.setSelectionRange(foc.p,foc.p)}catch(x){}}foc=null}
+ if(tab==="cf"&&U){cfStop();cfInit()}else cfStop();
+}
+function msg(m,err){flash={m:m,err:!!err}}
+document.addEventListener("click",function(e){
+ var b=e.target.closest("[data-act]");if(!b)return;
+ var a=b.dataset.act;flash=null;
+ if(a==="tab"){tab=b.dataset.v;q="";fe=""}
+ else if(a==="scan"){
+  if(scanning||ident)return;
+  var o=S.ops.filter(function(x){return x.m===selOp})[0];scanning=true;render();
+  setTimeout(function(){scanning=false;ident=o;render();setTimeout(function(){var x=ident;ident=null;entrar(x);render()},1800)},1400);return;
+ }
+ else if(a==="t3d"){t3dOpen(b.dataset.id);return}
+ else if(a==="cfstep"){cfGo(+b.dataset.v);window.scrollTo({top:0,behavior:"smooth"});return}
+ else if(a==="sair"){U=null;welcome=null}
+ else if(a==="goto"){cod=b.dataset.id;tab="mov"}
+ else if(a==="reset"){if(confirm("Apagar todos os dados e voltar aos dados de demonstração?")){S=seed();save();msg("Dados de demonstração restaurados.")}}
+ else if(a==="mv"){
+  var t=S.tools.filter(function(x){return x.id===cod})[0],ac=b.dataset.a,o=document.getElementById("os"),os=o?o.value:"",prev=t.s;
+  if(ac==="d"&&t.op!==U.m){msg("🔒 Bloqueado: apenas "+opn(t.op)+", que retirou com a própria digital, pode devolver esta ferramenta.",1)}
+  else if(ac!=="d"&&!os){msg("Escolha a ordem de serviço.",1)}
+  else{
+   t.s=ac;t.t=Date.now();if(ac==="d"){t.op=null;t.os=null}else{t.op=U.m;t.os=os;osSel=os}
+   S.hist.push({t:t.t,k:ac==="u"?"Retirada":"Devolução",id:t.id,n:t.n,op:U.m,os:os||"—"});
+   save();msg(t.n+": "+(ac==="u"?"retirada":"devolvida")+" com sucesso.");
+  }
+ }
+ render();
+});
+document.addEventListener("submit",function(e){
+ e.preventDefault();var id=e.target.id;flash=null;
+ var v=function(i){return document.getElementById(i).value.trim()};
+ if(id==="f-cod"){cod=v("cod").toUpperCase()}
+ else if(id==="f-tool"&&admin()){
+  var n=S.tools.length+1;S.tools.push({id:v("tn").replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase().padEnd(2,"X")+("00"+n).slice(-3),n:v("tn"),c:v("tc"),s:"d",op:null,os:null,t:Date.now()});
+  S.hist.push({t:Date.now(),k:"Cadastro",id:"—",n:v("tn"),op:U.m,os:"—"});save();msg("Ferramenta cadastrada.");
+ }else if(id==="f-os"&&admin()){
+  var nn="OS-"+(1042+S.os.length);S.os.push({n:nn,d:v("od")});save();msg(nn+" aberta.");
+ }
+ render();
+});
+document.addEventListener("input",function(e){
+ var t=e.target;if(t.id!=="q")return;
+ q=t.value;foc={id:"q",p:t.selectionStart};render();
+});
+document.addEventListener("change",function(e){
+ if(e.target.id==="fe"){fe=e.target.value;render()}
+ if(e.target.id==="mat")selOp=e.target.value;
+});
+/* ===== Como funciona em 3D ===== */
+var CF_STEPS=[
+["Digital","O operador encosta o dedo no leitor de digital. O leitor captura a impressão e envia ao sistema."],
+["Identificação","O sistema compara com as digitais cadastradas, mostra o nome completo na tela com a mensagem de chegada e registra o horário."],
+["Gaveta liberada","A trava da gaveta do operador é liberada e ela abre, mostrando as ferramentas que ficam guardadas nela."],
+["Leitura do QR Code","Ao retirar a ferramenta, o operador aproxima a etiqueta QR Code do leitor. A tela mostra qual ferramenta é e a ordem de serviço."],
+["Registro no banco de dados","O sistema grava quem retirou, qual ferramenta, a ordem de serviço e o horário. O painel passa a mostrar a ferramenta como Em uso."],
+["Devolução","Na devolução, o operador abre a gaveta, lê o QR Code da ferramenta e guarda no lugar dela."],
+["Painel atualizado","A gaveta se fecha e o painel volta a mostrar a ferramenta como Disponível, com todo o histórico salvo."]];
+var CF_T=[
+{f:0,g:"a",dr:0,tl:"slot",bm:0,pk:0,db:.1},
+{f:1,g:"v",dr:0,tl:"slot",bm:0,pk:0,db:.1},
+{f:1,g:"v",dr:1,tl:"slot",bm:0,pk:0,db:.1},
+{f:1,g:"x",dr:1,tl:"scan",bm:1,pk:0,db:.1},
+{f:1,g:"x",dr:0,tl:"use",bm:0,pk:1,db:1},
+{f:1,g:"x",dr:1,tl:"slot",bm:0,pk:0,db:.1},
+{f:1,g:"x",dr:0,tl:"slot",bm:0,pk:0,db:.1}];
+var CF_IC=[
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11c1.7 0 3 1.4 3 3v3.5"/><path d="M9 14a3 3 0 0 1 5.6-1.5"/><path d="M6 15a6 6 0 0 1 10.4-4.1"/><path d="M3.5 13.5A8.5 8.5 0 0 1 17 6.9"/><path d="M12 18.5V21"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M5.5 16.2c.7-1.5 2-2.2 3.5-2.2s2.8.7 3.5 2.2"/><path d="M15 9.5h4M15 13h4"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1"/><path d="M10 7.5h4"/><rect x="3" y="13" width="18" height="7" rx="1"/><path d="M10 16.5h4"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h4v4h-4"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a6 6 0 0 1 0 12h-3"/></svg>',
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19v-6M11 19V5M17 19v-9M2.5 19h19"/></svg>'];
+function cfGreet(){var h=new Date().getHours();return h<12?"Bom dia":h<18?"Boa tarde":"Boa noite"}
+var CF_SCR=[
+function(){return [["Aguardando digital…","#9fb0ba",30]]},
+function(){return [[cfGreet()+",","#fff",28],["Carlos Eduardo","#fff",34],["Ferreira Lima!","#fff",34],["Gaveta nº 03 liberada","#3fc6a8",24]]},
+function(){return [["Gaveta 03 aberta","#fff",34],["Escolha a ferramenta","#9fb0ba",24],["e a ordem de serviço","#9fb0ba",24]]},
+function(){return [["Lendo QR Code…","#f2b01e",28],["Broca helicoidal","#fff",34],["BR013","#fff",34],["OS-1042","#9fb0ba",24]]},
+function(){return [["Retirada registrada","#3fc6a8",30],["Disponíveis: 20","#fff",30],["Em uso: 4","#ff8a4d",30]]},
+function(){return [["Devolução","#f2b01e",30],["Broca helicoidal BR013","#fff",26],["Guardada na gaveta 03","#9fb0ba",24]]},
+function(){return [["Painel","#fff",30],["Disponíveis: 21","#3fc6a8",32],["Em uso: 3","#ff8a4d",32],["Histórico salvo","#9fb0ba",22]]}];
+var cfStep=0,cfPlaying=null,cfRaf=null,cfKey=null,cfStopFns=[],cfDrawScr=null;
+function cfStop(){
+ while(cfStopFns.length){try{cfStopFns.pop()()}catch(e){}}
+ if(cfRaf){cancelAnimationFrame(cfRaf);cfRaf=null}
+ if(cfPlaying){clearInterval(cfPlaying);cfPlaying=null;var p=document.getElementById("play");if(p)p.textContent="Reproduzir"}
+ if(cfKey){document.removeEventListener("keydown",cfKey);cfKey=null}
+ cfDrawScr=null;
+}
+function cfGo(i){
+ cfStep=(i+CF_STEPS.length)%CF_STEPS.length;
+ var tt=document.getElementById("tt"),dd=document.getElementById("dd"),nn=document.getElementById("n"),dots=document.getElementById("dots");
+ if(tt)tt.textContent=(cfStep+1)+". "+CF_STEPS[cfStep][0];
+ if(dd)dd.textContent=CF_STEPS[cfStep][1];
+ if(nn)nn.textContent=cfStep+1;
+ if(dots)Array.prototype.forEach.call(dots.children,function(b,j){if(j===cfStep)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
+ if(cfDrawScr)cfDrawScr(cfStep);
+ Array.prototype.forEach.call(document.querySelectorAll(".cfcard"),function(c,j){if(j===cfStep)c.classList.add("on");else c.classList.remove("on")});
+}
+function cfv(){
+ var h='<h2 class="cfhero">Como funciona em 3D</h2><p class="cfsub">Cena interativa do fluxo completo: gire com o dedo ou mouse, aproxime e siga cada etapa — da leitura da digital até o registro no banco de dados.</p>';
+ h+='<div id="stage"><canvas id="cv" aria-label="Cena 3D do sistema: armário com gavetas, leitor de digital, leitor de QR Code, tela e banco de dados"></canvas><div class="hint">Passo <b id="n">1</b> de 7</div><button id="reset" type="button">Centralizar</button></div>';
+ h+='<div class="box cfpanel" aria-live="polite"><h3 id="tt"></h3><p id="dd"></p><div class="ctl"><button id="prev" type="button">Anterior</button><button id="next" class="go" type="button">Próximo</button><button id="play" type="button">Reproduzir</button><div class="dots" id="dots"></div></div></div>';
+ h+='<h3 class="cfttl">Os 7 passos do fluxo</h3><p class="cflead">Clique em um cartão para levar a cena 3D direto àquele passo.</p><div class="cfgrid">'+CF_STEPS.map(function(s,i){return '<button type="button" class="cfcard" data-act="cfstep" data-v="'+i+'"><span class="cfch"><span class="cfn">'+(i+1)+'</span><b>'+s[0]+'</b><span class="cfic">'+CF_IC[i]+'</span></span><p>'+s[1]+'</p></button>'}).join('')+'</div>';
+ return h;
+}
+function cfInit(){
+ if(cfRaf)return;
+ cfStep=0;
+ try{
+  var W=window.THREE;
+  if(!W)throw new Error("three");
+  var cv=document.getElementById("cv"),stage=document.getElementById("stage");
+  var renderer=new W.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  var scene=new W.Scene(),camera=new W.PerspectiveCamera(42,1,.1,100);
+  scene.add(new W.AmbientLight(0xffffff,.75));
+  var dl=new W.DirectionalLight(0xffffff,.85);dl.position.set(4,8,6);scene.add(dl);
+  var dark=matchMedia("(prefers-color-scheme:dark)").matches;
+  function M(c,o){return new W.MeshStandardMaterial(Object.assign({color:c,roughness:.65,metalness:.15},o||{}))}
+  function box(w,h,d,c,x,y,z,p){var m=new W.Mesh(new W.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(p||scene).add(m);return m}
+  function cyl(r,h,c,x,y,z,p){var m=new W.Mesh(new W.CylinderGeometry(r,r,h,24),M(c));m.position.set(x,y,z);(p||scene).add(m);return m}
+  var g=new W.Mesh(new W.CircleGeometry(7.5,48),M(dark?0x1b262e:0xdde3e7,{roughness:1}));g.rotation.x=-Math.PI/2;scene.add(g);
+  var CX=-1.8;
+  box(2.2,2.4,1.4,0x3a4a56,CX,1.2,0);
+  [.55,1.85].forEach(function(y){box(2.0,.6,.06,0x5b6e7b,CX,y,.73);box(.5,.05,.06,0xc3cfd6,CX,y,.78)});
+  var dr=new W.Group();dr.position.set(CX,1.2,0);scene.add(dr);
+  box(2.0,.6,.06,0xf2b01e,0,0,.73,dr);box(.5,.05,.06,0x1c2830,0,0,.78,dr);
+  box(1.8,.05,.95,0x24323c,0,-.1,.25,dr);box(.05,.3,.95,0x24323c,-.9,.05,.25,dr);box(.05,.3,.95,0x24323c,.9,.05,.25,dr);box(1.8,.3,.05,0x24323c,0,.05,-.2,dr);
+  [-.55,.55].forEach(function(x){var c=cyl(.06,.5,0x9fb0ba,x,0,.5,dr);c.rotation.z=Math.PI/2});
+  function qrTex(){var c=document.createElement("canvas");c.width=c.height=128;var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,128,128);x.fillStyle="#111";var n=15,s=128/n;
+  function fnd(a,b){x.fillRect(a*s,b*s,4*s,4*s);x.fillStyle="#fff";x.fillRect((a+1)*s,(b+1)*s,2*s,2*s);x.fillStyle="#111";x.fillRect((a+1.5)*s,(b+1.5)*s,s,s)}
+  for(var i=0;i<n;i++)for(var j=0;j<n;j++){var inF=(i<5&&j<5)||(i>9&&j<5)||(i<5&&j>9);if(!inF&&((i*7+j*13+3)%5<2))x.fillRect(i*s,j*s,s,s)}
+  fnd(0,0);fnd(11,0);fnd(0,11);
+  return new W.CanvasTexture(c)}
+  var tool=new W.Group();var body=cyl(.06,.5,0xf2b01e,0,0,0,tool);body.rotation.z=Math.PI/2;
+  var tip=new W.Mesh(new W.ConeGeometry(.06,.14,16),M(0xc3cfd6));tip.rotation.z=Math.PI/2;tip.position.x=.32;tool.add(tip);
+  var ql=new W.Mesh(new W.PlaneGeometry(.2,.2),new W.MeshBasicMaterial({map:qrTex()}));ql.position.set(-.05,.03,.075);tool.add(ql);
+  tool.position.set(CX,1.2,.5);scene.add(tool);
+  var RX=CX+.6;box(.6,.1,.6,0x24323c,RX,2.45,.3);
+  var disc=new W.Mesh(new W.CircleGeometry(.2,32),new W.MeshBasicMaterial({color:0x4a5a64}));disc.rotation.x=-Math.PI/2;disc.position.set(RX,2.505,.3);scene.add(disc);
+  var finger=new W.Group();cyl(.08,.5,0xe0b090,0,.25,0,finger);var ft=new W.Mesh(new W.SphereGeometry(.08,16,12),M(0xe0b090));finger.add(ft);finger.position.set(RX,3.6,.3);scene.add(finger);
+  box(2.4,.08,1.3,0x8b99a3,1.5,.9,.3);[[.4,-.3],[2.6,-.3],[.4,.9],[2.6,.9]].forEach(function(p){box(.07,.86,.07,0x5b6e7b,p[0],.45,p[1])});
+  var mon=new W.Group();mon.position.set(1.5,0,-.1);mon.rotation.y=.2;scene.add(mon);
+  box(.5,.05,.4,0x24323c,0,.97,0,mon);box(.12,.5,.1,0x24323c,0,1.2,0,mon);box(1.7,1.05,.06,0x1c2830,0,1.78,0,mon);
+  var sc=document.createElement("canvas");sc.width=512;sc.height=320;var tex=new W.CanvasTexture(sc);
+  var scr=new W.Mesh(new W.PlaneGeometry(1.6,.95),new W.MeshBasicMaterial({map:tex}));scr.position.set(0,1.78,.035);mon.add(scr);
+  function drawScr(i){var c=sc.getContext("2d");c.fillStyle="#10202a";c.fillRect(0,0,512,320);c.fillStyle="#f2b01e";c.fillRect(0,0,512,44);c.fillStyle="#1c2830";c.font="700 26px sans-serif";c.fillText("EMEC SMART TOOLS",16,31);
+  var y=92;CF_SCR[i]().forEach(function(l){c.fillStyle=l[1];c.font="600 "+l[2]+"px sans-serif";c.fillText(l[0],24,y);y+=l[2]+16});tex.needsUpdate=true}
+  cfDrawScr=drawScr;
+  box(.1,.5,.1,0x24323c,.8,1.2,.95);box(.3,.2,.3,0x1c2830,.8,1.5,.95);box(.06,.1,.1,0xd93a2b,.64,1.5,.95);
+  var beam=new W.Mesh(new W.BoxGeometry(.46,.02,.02),new W.MeshBasicMaterial({color:0xff2a1a}));beam.position.set(.4,1.5,.95);scene.add(beam);
+  var dbs=[0,1,2].map(function(i){var m=new W.Mesh(new W.CylinderGeometry(.5,.5,.38,32),M(0x3a4a56,{emissive:0x2fbf9b,emissiveIntensity:.1}));m.position.set(3.7,.25+i*.45,-.2);scene.add(m);return m});
+  var path=[new W.Vector3(2.35,1.5,-.1),new W.Vector3(3.2,1.2,-.2)];
+  var ln=new W.Line(new W.BufferGeometry().setFromPoints(path),new W.LineBasicMaterial({color:0x9fb0ba}));scene.add(ln);
+  var pk=[0,1,2,3].map(function(){var m=new W.Mesh(new W.SphereGeometry(.07,12,10),new W.MeshBasicMaterial({color:0xf2b01e}));m.visible=false;scene.add(m);return m});
+  var L=[["Leitor de digital",function(){return new W.Vector3(RX,2.95,.3)}],["Gaveta do operador",function(){return new W.Vector3(CX-1.35,1.2,.75)}],["Ferramenta com QR Code",function(){return tool.position.clone().add(new W.Vector3(0,.35,0))}],["Leitor de QR Code",function(){return new W.Vector3(.8,1.85,.95)}],["Tela do sistema",function(){return new W.Vector3(1.5,2.5,-.1)}],["Banco de dados",function(){return new W.Vector3(3.7,1.8,-.2)}]].map(function(x){var e=document.createElement("div");e.className="lbl";e.textContent=x[0];stage.appendChild(e);return {e:e,f:x[1]}});
+  var cam={th:.6,ph:1.12,r:10.5},TG=new W.Vector3(.7,1.3,.2),D={th:.6,ph:1.12,r:10.5},DN=null;
+  function place(){camera.position.set(TG.x+cam.r*Math.sin(cam.th)*Math.sin(cam.ph),TG.y+cam.r*Math.cos(cam.ph),TG.z+cam.r*Math.cos(cam.th)*Math.sin(cam.ph));camera.lookAt(TG)}
+  cv.addEventListener("pointerdown",function(e){DN=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener("pointermove",function(e){if(!DN)return;cam.th-=(e.clientX-DN[0])*.008;cam.ph=Math.max(.35,Math.min(1.5,cam.ph-(e.clientY-DN[1])*.006));DN=[e.clientX,e.clientY]});
+  cv.addEventListener("pointerup",function(){DN=null});
+  cv.addEventListener("wheel",function(e){e.preventDefault();cam.r=Math.max(5,Math.min(15,cam.r+e.deltaY*.01))},{passive:false});
+  document.getElementById("reset").addEventListener("click",function(){cam.th=D.th;cam.ph=D.ph;cam.r=D.r});
+  function size(){var s=stage;renderer.setSize(s.clientWidth,s.clientHeight,false);camera.aspect=s.clientWidth/s.clientHeight;camera.updateProjectionMatrix();if(camera.aspect<.8)D.r=cam.r=15}
+  window.addEventListener("resize",size);size();
+  cfStopFns.push(function(){window.removeEventListener("resize",size)});
+  var cur={f:3.6,dr:0},col=new W.Color(0x4a5a64),GC={a:0xf2b01e,v:0x2fbf9b,x:0x4a5a64},SL=new W.Vector3(),tgt=new W.Vector3();
+  function frame(t){
+   var S=CF_T[cfStep],k=.08;
+   cur.f+=((S.f?3.6:2.62)-cur.f)*k;cur.dr+=(S.dr-cur.dr)*k;
+   finger.position.y=cur.f;dr.position.z=cur.dr;
+   col.lerp(new W.Color(GC[S.g]),.1);disc.material.color.copy(col);
+   if(S.g==="a")disc.material.color.multiplyScalar(.7+.3*Math.sin(t*.012));
+   SL.set(CX,1.2,.5+cur.dr);
+   if(S.tl==="slot")tgt.copy(SL);else if(S.tl==="scan")tgt.set(.05,1.5,.95);else tgt.set(.45,1.2,1.4);
+   tool.position.lerp(tgt,.07);
+   beam.visible=!!S.bm&&Math.sin(t*.02)>-.4;
+   dbs.forEach(function(m){m.material.emissiveIntensity+=(S.db*(.6+.4*Math.sin(t*.01))-m.material.emissiveIntensity)*.1});
+   pk.forEach(function(m,i){m.visible=!!S.pk;if(S.pk){var u=((t*.0007)+i/4)%1;m.position.lerpVectors(path[0],path[1],u)}});
+   place();
+   var w=stage.clientWidth,h=stage.clientHeight,v=new W.Vector3();
+   L.forEach(function(l){v.copy(l.f()).project(camera);l.e.style.display=v.z>1?"none":"block";l.e.style.transform="translate("+((v.x*.5+.5)*w)+"px,"+((-v.y*.5+.5)*h)+"px) translate(-50%,-100%)"});
+   renderer.render(scene,camera);
+   cfRaf=requestAnimationFrame(frame);
+  }
+  cfRaf=requestAnimationFrame(frame);
+  CF_STEPS.forEach(function(s,i){var b=document.createElement("button");b.type="button";b.textContent=i+1;b.setAttribute("aria-label","Passo "+(i+1)+": "+s[0]);b.addEventListener("click",function(){cfGo(i)});document.getElementById("dots").appendChild(b)});
+  document.getElementById("prev").addEventListener("click",function(){cfGo(cfStep-1)});
+  document.getElementById("next").addEventListener("click",function(){cfGo(cfStep+1)});
+  document.getElementById("play").addEventListener("click",function(){
+   if(cfPlaying){clearInterval(cfPlaying);cfPlaying=null;this.textContent="Reproduzir"}
+   else{cfPlaying=setInterval(function(){cfGo(cfStep+1)},5000);this.textContent="Pausar"}
+  });
+  cfKey=function(e){if(e.key==="ArrowRight")cfGo(cfStep+1);if(e.key==="ArrowLeft")cfGo(cfStep-1)};
+  document.addEventListener("keydown",cfKey);
+  cfGo(0);
+ }catch(err){
+  var st=document.getElementById("stage");
+  if(st)st.innerHTML='<div id="err">Não foi possível iniciar a cena 3D neste navegador (WebGL indisponível). Os passos abaixo explicam o funcionamento.</div>';
+ }
+}
+/* ===== Visualizador 3D das ferramentas ===== */
+var t3d=null;
+function t3dClose(){
+ if(!t3d)return;
+ if(t3d.raf)cancelAnimationFrame(t3d.raf);
+ if(t3d.key)document.removeEventListener("keydown",t3d.key);
+ if(t3d.renderer)t3d.renderer.dispose();
+ if(t3d.el&&t3d.el.parentNode)t3d.el.parentNode.removeChild(t3d.el);
+ t3d=null;
+}
+function t3dMat(c,o){var W=window.THREE;return new W.MeshStandardMaterial(Object.assign({color:c,roughness:.35,metalness:.75},o||{}))}
+function t3dBuild(n){
+ var W=window.THREE,g=new W.Group(),nm=n.toLowerCase();
+ var ST=0x9fb4c4,DK=0x2a3945,AC=0xf2b01e,FS=0x77899a;
+ function P(m,x,y,z,rz,rx){m.position.set(x,y,z);if(rz)m.rotation.z=rz;if(rx)m.rotation.x=rx;g.add(m);return m}
+ function C(r1,r2,h,seg,c,o){return new W.Mesh(new W.CylinderGeometry(r1,r2,h,seg||24),t3dMat(c,o))}
+ function Bx(w,h,d,c,o){return new W.Mesh(new W.BoxGeometry(w,h,d),t3dMat(c,o))}
+ if(/pastilha/.test(nm)){
+  P(new W.Mesh(new W.CylinderGeometry(.55,.55,.14,3),t3dMat(0xd9a021,{metalness:.9,roughness:.25})),0,.4,0);P(Bx(1.6,.06,1.6,DK),0,-.4,0);
+ }else if(/paqu/.test(nm)){
+  P(Bx(2.8,.1,.34,ST),0,.1,0);P(Bx(.45,.6,.24,ST),1.15,.42,0);P(Bx(.4,.6,.28,DK),-.55,.42,.02);
+  var rol=C(.07,.07,.3,16,DK);rol.rotation.z=Math.PI/2;P(rol,-.55,.1,.24);
+  P(C(.025,.025,1.2,10,ST),1.4,-.5,0);
+ }else if(/micr/.test(nm)){
+  var cfr=new W.Mesh(new W.TorusGeometry(.75,.13,16,40,Math.PI*1.5),t3dMat(DK));cfr.rotation.z=Math.PI/4;P(cfr,0,.4,0);
+  var anv=C(.05,.05,.3,12,ST);anv.rotation.z=Math.PI/2;P(anv,.85,.4,0);
+  var esp=C(.045,.045,.5,12,ST);esp.rotation.z=Math.PI/2;P(esp,1.0,.4,0);
+  var tim=C(.2,.2,.4,24,AC);tim.rotation.z=Math.PI/2;P(tim,1.3,.4,0);
+  P(Bx(.14,.9,.14,DK),0,-.3,0);
+ }else if(/relógio|relogio/.test(nm)){
+  P(C(.55,.55,.12,32,DK),0,.9,0);P(C(.48,.48,.1,32,0xf2f5f7,{roughness:.3,metalness:.05}),0,.96,0);
+  P(Bx(.04,.4,.02,AC),0.1,1.02,.03,-.6);P(C(.05,.05,.9,12,ST),0,.35,0);
+  P(new W.Mesh(new W.SphereGeometry(.08,12,10),t3dMat(ST)),0,-.15,0);P(Bx(.2,.4,.06,DK),0,.9,-.12);
+ }else if(/goni/.test(nm)){
+  var semi=new W.Mesh(new W.CylinderGeometry(.8,.8,.06,32,1,false,0,Math.PI),t3dMat(ST));P(semi,0,.1,0,0,-Math.PI/2);
+  P(Bx(1.7,.05,.2,DK),0,.15,0);P(C(.05,.05,.5,12,DK),0,-.15,0);
+ }else if(/bloco/.test(nm)){
+  P(Bx(1.3,.4,.8,ST,{roughness:.2,metalness:.9}),0,.2,0);P(Bx(.5,.02,.3,DK),0,.42,0);
+ }else if(/calibrador/.test(nm)){
+  P(new W.Mesh(new W.TorusGeometry(.5,.15,16,32),t3dMat(ST)),0,.75,0);P(Bx(.16,.6,.16,DK),0,-.05,0);
+ }else if(/soquete/.test(nm)){
+  P(C(.32,.32,.75,32,ST),0,.4,0);P(Bx(.2,.06,.2,0x11161b),0,.8,0);P(C(.335,.335,.1,32,AC),0,.65,0);
+ }else if(/chave|torqu/.test(nm)){
+  P(Bx(.22,1.5,.22,DK),0,.2,0);P(C(.09,.09,.9,16,ST),0,1.35,0);
+  P(Bx(.3,.3,.35,ST),0,1.85,0);P(C(.1,.1,.18,4,AC),0,2.05,0);
+  if(/torqu/.test(nm)){var esc2=Bx(.05,.7,.24,AC,{emissive:0xf2b01e,emissiveIntensity:.45});P(esc2,0,1.0,.14)}
+ }else if(/esmerilhadeira/.test(nm)){
+  var bd=C(.26,.26,1.1,24,DK);bd.rotation.z=Math.PI/2;P(bd,0,1.1,0);
+  var gh=C(.24,.24,.4,24,ST);gh.rotation.z=Math.PI/2;P(gh,.75,1.1,0);
+  P(C(.5,.5,.06,32,0x7d7d85,{roughness:.9,metalness:.2}),1.0,1.1,0,Math.PI/2);
+  P(Bx(.34,.1,.6,AC),1.0,1.48,0);var sh=C(.05,.05,.5,12,DK);sh.rotation.x=Math.PI/2;P(sh,0,1.1,-.4);
+  P(Bx(.35,.7,.35,AC),-.85,.6,0,-.35);
+ }else if(/furadeira|parafusadeira/.test(nm)){
+  P(Bx(.3,.95,.3,AC),-.35,.45,0,.15);P(Bx(1.1,.34,.3,DK),.15,1.05,0);
+  var ck=C(.1,.13,.3,16,ST);ck.rotation.z=Math.PI/2;P(ck,.85,1.05,0);
+  var bt=C(.03,.03,.6,10,ST);bt.rotation.z=Math.PI/2;P(bt,1.25,1.05,0);
+  P(Bx(.3,.3,.5,DK),-.5,.35,0);
+ }else if(/rebolo/.test(nm)){
+  P(C(.75,.75,.28,40,0x8b8f96,{roughness:.95,metalness:.05}),0,.5,0,0,Math.PI/2);
+  P(C(.14,.14,.3,16,DK),0,.5,0,0,Math.PI/2);P(Bx(.4,.9,.4,DK),-.7,.4,0);
+ }else if(/broca|alargador|bedame|escareador|fresa|tarraxa|macho/.test(nm)){
+  if(/macho/.test(nm)){P(C(.2,.06,.9,24,FS),0,.3,0);P(Bx(.24,.3,.24,ST),0,.9,0);P(C(.09,.09,.6,16,ST),0,1.35,0)}
+  else{P(C(.09,.09,.7,24,ST),0,1.15,0);P(C(.16,.03,1.1,24,FS),0,.35,0);P(new W.Mesh(new W.ConeGeometry(.035,.16,12),t3dMat(ST)),0,-.28,0,Math.PI)}
+  [.55,.3].forEach(function(y){var fl=new W.Mesh(new W.TorusGeometry(/macho/.test(nm)?.17:.13,.02,10,24),t3dMat(ST));fl.rotation.x=Math.PI/2;fl.position.set(0,y,0);g.add(fl)});
+ }else{
+  P(C(.4,.4,.8,6,AC,{metalness:.6,roughness:.3}),0,.5,0);P(Bx(1.2,.06,.5,DK),0,-.2,0);
+ }
+ return g;
+}
+function t3dOpen(id){
+ t3dClose();
+ var t=S.tools.filter(function(x){return x.id===id})[0];if(!t)return;
+ var ov=document.createElement("div");ov.className="t3d-ov";
+ ov.innerHTML='<div class="t3d" role="dialog" aria-label="Modelo 3D de '+esc(t.n)+'"><div class="t3d-hd"><div><b>'+esc(t.n)+'</b> <span class="muted" style="color:#9fb0ba">'+esc(t.id)+' · '+esc(t.c)+'</span></div><div>'+chip(t.s,t)+' <button class="t3d-x" type="button" aria-label="Fechar">✕</button></div></div><div class="t3d-st"><canvas></canvas><div class="t3d-hint">Arraste para girar · Role para aproximar</div><div class="t3d-tag">EMEC 3D VIEW</div></div></div>';
+ document.body.appendChild(ov);
+ ov.addEventListener("click",function(e){if(e.target===ov)t3dClose()});
+ ov.querySelector(".t3d-x").addEventListener("click",t3dClose);
+ t3d={el:ov};
+ try{
+  var W=window.THREE;if(!W)throw new Error("three");
+  var cv=ov.querySelector("canvas"),stage=ov.querySelector(".t3d-st");
+  var R=new W.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  var sc=new W.Scene(),cm=new W.PerspectiveCamera(40,1,.1,100);
+  sc.add(new W.AmbientLight(0xffffff,.55));
+  var d1=new W.DirectionalLight(0xffffff,.9);d1.position.set(3,5,4);sc.add(d1);
+  var p1=new W.PointLight(0x00e5ff,1.2,20);p1.position.set(-3,2,2);sc.add(p1);
+  var p2=new W.PointLight(0xf2b01e,1,20);p2.position.set(3,1,-2);sc.add(p2);
+  var gr=new W.GridHelper(8,24,0x00e5ff,0x1e3a46);gr.position.y=-1.2;gr.material.opacity=.35;gr.material.transparent=true;sc.add(gr);
+  var ring=new W.Mesh(new W.TorusGeometry(1.15,.02,8,60),new W.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.y=-1.18;sc.add(ring);
+  var mdl=t3dBuild(t.n);sc.add(mdl);
+  var tg=new W.Vector3(0,.3,0),orb={th:.5,ph:1.25,r:4.6},drag=null;
+  function place(){cm.position.set(tg.x+orb.r*Math.sin(orb.th)*Math.sin(orb.ph),tg.y+orb.r*Math.cos(orb.ph),tg.z+orb.r*Math.cos(orb.th)*Math.sin(orb.ph));cm.lookAt(tg)}
+  cv.addEventListener("pointerdown",function(e){drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener("pointermove",function(e){if(!drag)return;orb.th-=(e.clientX-drag[0])*.008;orb.ph=Math.max(.3,Math.min(1.5,orb.ph-(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY]});
+  cv.addEventListener("pointerup",function(){drag=null});
+  cv.addEventListener("wheel",function(e){e.preventDefault();orb.r=Math.max(2.5,Math.min(8,orb.r+e.deltaY*.01))},{passive:false});
+  function size(){R.setSize(stage.clientWidth,stage.clientHeight,false);cm.aspect=stage.clientWidth/stage.clientHeight;cm.updateProjectionMatrix()}
+  window.addEventListener("resize",size);size();
+  t3d.renderer=R;
+  t3d.key=function(e){if(e.key==="Escape")t3dClose()};document.addEventListener("keydown",t3d.key);
+  (function frame(){
+   if(!t3d)return;
+   if(!drag)mdl.rotation.y+=.012;
+   place();R.render(sc,cm);
+   t3d.raf=requestAnimationFrame(frame);
+  })();
+ }catch(err){
+  stage.innerHTML='<div id="err">Visualizador 3D indisponível neste navegador (WebGL falhou).</div>';
+ }
+}
+render();</script>
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
